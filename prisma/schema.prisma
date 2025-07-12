@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model OpenAiAccount {
+  id             String      @id @default(uuid())
+  friendlyName   String      @unique
+  openaiUsername String
+  openaiPassword String
+  proxyInfo      Json?
+  authTokens     AuthToken[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model AuthToken {
+  id              String      @id @default(uuid())
+  token           String      @unique
+  expiresAt       DateTime
+  isActive        Boolean     @default(true)
+  openAiAccountId String
+  openAiAccount   OpenAiAccount @relation(fields: [openAiAccountId], references: [id], onDelete: Cascade)
+  lastUsedAt      DateTime?
+  usageCount      Int         @default(0)
+  lastUserAgent   String?
+  chats           Chat[]
+  createdAt       DateTime    @default(now())
+}
+
+model Chat {
+  id          String    @id @default(uuid())
+  chatId      String
+  title       String
+  content     Json
+  authTokenId String
+  authToken   AuthToken @relation(fields: [authTokenId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  @@unique([chatId, authTokenId])
+}
