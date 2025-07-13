@@ -17,12 +17,8 @@ export class AuthService {
   async loginWithToken(tokenLoginDto: TokenLoginDto) {
     const { token } = tokenLoginDto;
 
-    // --- این بخش کاملاً بازنویسی می‌شود ---
-
-    // از یک تراکنش (transaction) استفاده می‌کنیم تا هر دو عملیات (خواندن و آپدیت)
-    // به صورت یکپارچه انجام شوند و از race condition جلوگیری شود.
     const result = await this.prisma.$transaction(async (tx) => {
-      // ۱. توکن دستوری را در دیتابیس پیدا کن
+      // ۱. توکن را پیدا کن
       const authToken = await tx.authToken.findUnique({
         where: { token },
         include: { openAiAccount: true },
@@ -33,27 +29,33 @@ export class AuthService {
         throw new UnauthorizedException('Invalid or expired token.');
       }
 
-      // ۳. بررسی حد مجاز استفاده
+      // ۳. (تغییر کلیدی) چک می‌کنیم که آیا تعداد استفاده *فعلی* به حد مجاز رسیده است یا خیر
       if (authToken.usageCount >= MAX_LOGIN_ATTEMPTS) {
-        // اگر به حد مجاز رسیده، توکن را برای همیشه غیرفعال کن
-        await tx.authToken.update({
-          where: { id: authToken.id },
-          data: { isActive: false },
-        });
-        throw new ForbiddenException('This token has reached its maximum login limit.');
+          // حتی اگر رسیده بود، محض احتیاط آن را غیرفعال می‌کنیم و خطا می‌دهیم
+          await tx.authToken.update({ where: { id: authToken.id }, data: { isActive: false } });
+          throw new ForbiddenException('This token has reached its maximum login limit.');
       }
 
-      // ۴. اگر همه چیز درست بود، تعداد استفاده را یکی اضافه کن
+      // ۴. تعداد استفاده را یکی اضافه کن و اطلاعات آپدیت شده را در یک متغیر بگیر
       const updatedAuthToken = await tx.authToken.update({
         where: { id: authToken.id },
         data: { 
-          usageCount: { increment: 1 }, // به صورت اتمیک یکی اضافه می‌کند
+          usageCount: { increment: 1 },
           lastUsedAt: new Date(),
-          // می‌توانیم اینجا user-agent را هم ذخیره کنیم اگر از درخواست گرفته شود
         },
       });
+      
+      // ۵. حالا چک می‌کنیم که آیا *بعد از* این آپدیت، تعداد استفاده از حد مجاز بیشتر شده است یا خیر
+      // اگر این سومین استفاده بود، توکن را برای استفاده‌های بعدی غیرفعال می‌کنیم
+      if (updatedAuthToken.usageCount >= MAX_LOGIN_ATTEMPTS) {
+          await tx.authToken.update({
+              where: { id: updatedAuthToken.id },
+              data: { isActive: false }
+          });
+          console.log(`Token ${token} has reached its limit and is now deactivated.`);
+      }
 
-      // حالا بقیه منطق لاگین را با اطلاعات آپدیت شده انجام می‌دهیم
+      // ۶. بقیه منطق مثل قبل
       const decryptedPassword = this.encryptionService.decrypt(authToken.openAiAccount.openaiPassword);
     
       const payload = { 
@@ -67,7 +69,7 @@ export class AuthService {
           username: authToken.openAiAccount.openaiUsername,
           password: decryptedPassword,
         },
-        usageInfo: { // (اختیاری) اطلاعات مفیدی برای نمایش به کاربر
+        usageInfo: {
           count: updatedAuthToken.usageCount,
           max: MAX_LOGIN_ATTEMPTS,
         }
