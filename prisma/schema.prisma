@@ -44,7 +44,7 @@ model Chat {
   id          String    @id @default(uuid())
   chatId      String
   title       String
-  content     Json
+//  content     Json
   authTokenId String
   authToken   AuthToken @relation(fields: [authTokenId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())

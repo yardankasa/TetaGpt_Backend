@@ -9,6 +9,4 @@ export class CreateChatDto {
   @IsNotEmpty()
   title: string;
 
-  @IsObject()
-  content: object;
 }
