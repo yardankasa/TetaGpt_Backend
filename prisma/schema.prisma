@@ -50,10 +50,3 @@ model Chat {
   createdAt   DateTime  @default(now())
   @@unique([chatId, authTokenId])
 }
-
-model Grou {
-
-  id          String    @id @default(uuid())
-  groid      String
-  title       String
-}
