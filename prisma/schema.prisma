@@ -60,7 +60,7 @@ model Chat {
   authTokenId String
   authToken   AuthToken @relation(fields: [authTokenId], references: [id], onDelete: Cascade)
   groupId     String?
-  group       Group     @relation(fields: [groupId], references: [id], onDelete: Cascade) 
+  group       Group?     @relation(fields: [groupId], references: [id], onDelete: Cascade) 
   createdAt   DateTime  @default(now())
   @@unique([chatId, authTokenId])
 }
