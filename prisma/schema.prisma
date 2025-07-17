@@ -40,13 +40,26 @@ model AuthToken {
   createdAt       DateTime    @default(now())
 }
 
+model Group {
+  id          String    @id @default(uuid())   // شناسه یکتا به صورت UUID
+  title       String                           // عنوان گروه
+  authTokenId String
+  authToken   AuthToken @relation(fields: [authTokenId], references: [id], onDelete: Cascade)
+  chats       Chat[]                           // چت‌های داخل گروه
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+
+}
+
 model Chat {
   id          String    @id @default(uuid())
   chatId      String
   title       String
-//  content     Json
   authTokenId String
   authToken   AuthToken @relation(fields: [authTokenId], references: [id], onDelete: Cascade)
+  groupId     String
+  group       Group     @relation(fields: [groupId], references: [id], onDelete: Cascade) 
   createdAt   DateTime  @default(now())
   @@unique([chatId, authTokenId])
 }

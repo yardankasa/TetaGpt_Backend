@@ -6,9 +6,10 @@ import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { EncryptionModule } from './encryption/encryption.module';
 import { ChatsModule } from './chats/chats.module';
+import { GroupsModule } from './groups/groups.module';
 
 @Module({
-  imports: [PrismaModule, AdminModule, AuthModule, EncryptionModule, ChatsModule], // مطمئن شوید این دو ماژول اینجا هستند
+  imports: [PrismaModule, AdminModule, AuthModule, EncryptionModule, ChatsModule, GroupsModule], // مطمئن شوید این دو ماژول اینجا هستند
   controllers: [AppController],
   providers: [AppService],
 })
