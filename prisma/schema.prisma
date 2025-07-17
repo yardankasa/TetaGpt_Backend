@@ -37,6 +37,7 @@ model AuthToken {
   usageCount      Int         @default(0)
   lastUserAgent   String?
   chats           Chat[]
+  groups          Group[]
   createdAt       DateTime    @default(now())
 }
 
