@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Delete, Param, ParseUUIDPipe, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param, ParseUUIDPipe, UseGuards, Request, NotFoundException } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
