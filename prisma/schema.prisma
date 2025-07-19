@@ -42,14 +42,20 @@ model AuthToken {
 }
 
 model Group {
-  id          String    @id @default(uuid())   // شناسه یکتا به صورت UUID
-  title       String                           // عنوان گروه
+  id          String    @id @default(uuid())
+  groupId     String
+  title       String
+  
   authTokenId String
   authToken   AuthToken @relation(fields: [authTokenId], references: [id], onDelete: Cascade)
-  chats       Chat[]                           // چت‌های داخل گروه
+  
+  chats       Chat[]
+  
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // یک گروه برای یک کاربر باید groupId و title منحصر به فرد داشته باشد
+  @@unique([groupId, authTokenId])
 
 }
 

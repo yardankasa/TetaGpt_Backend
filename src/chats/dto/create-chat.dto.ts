@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsObject } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateChatDto {
   @IsString()
@@ -8,5 +8,8 @@ export class CreateChatDto {
   @IsString()
   @IsNotEmpty()
   title: string;
-
+  
+  @IsString()
+  @IsOptional()
+  groupId?: string; 
 }

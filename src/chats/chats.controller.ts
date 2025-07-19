@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, UseGuards, Request, Delete, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Delete, Param, Patch, HttpCode, HttpStatus } from '@nestjs/common';
 import { ChatsService } from './chats.service';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { UpdateChatDto } from './dto/update-chat.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard'; // 1. گارد جدید را import کنید
 
 @Controller('chats')
@@ -26,6 +27,16 @@ export class ChatsController {
   remove(@Param('chatId') chatId: string, @Request() req) {
     const user = req.user;
     return this.chatsService.remove(chatId, user.authTokenId);
+  }
+
+@Patch(':chatId') // حالا Patch شناخته شده است
+  update(
+    @Param('chatId') chatId: string,
+    @Body() updateChatDto: UpdateChatDto,
+    @Request() req,
+  ) {
+    const user = req.user;
+    return this.chatsService.update(chatId, updateChatDto, user.authTokenId);
   }
 
 }

@@ -1,0 +1,35 @@
+# ---- Build Stage ----
+FROM node:20-alpine AS build
+
+WORKDIR /usr/src/app
+
+# فقط فایل‌های dependency برای استفاده از cache
+COPY package*.json ./
+RUN npm install
+
+# حالا فقط سورس + prisma رو جداگانه بیار تا invalidate بشه
+COPY prisma ./prisma
+COPY src ./src
+COPY tsconfig.* ./
+COPY nest-cli.json ./
+
+# Prisma client و build Nest
+RUN npx prisma generate
+RUN npm run build
+
+# ---- Production Stage ----
+FROM node:20-alpine
+WORKDIR /usr/src/app
+
+# فقط فایل‌های نهایی از مرحله build
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/prisma ./prisma
+COPY --from=build /usr/src/app/package*.json ./
+
+RUN npm install --only=production
+RUN npx prisma generate
+
+COPY ./entrypoint.sh .
+RUN chmod +x ./entrypoint.sh
+ENTRYPOINT ["./entrypoint.sh"]
+CMD ["npm", "run", "start:prod"]

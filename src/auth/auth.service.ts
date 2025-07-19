@@ -85,8 +85,14 @@ export class AuthService {
     });
 
     if (!authToken || !authToken.isActive || authToken.expiresAt < new Date()) {
-      throw new UnauthorizedException('Invalid or expired command token. Please login again.');
-    }
+
+    throw new UnauthorizedException({
+        statusCode: 401,
+        message: 'Command token has expired. Please login with a new token.',
+        errorCode: 'TOKEN_EXPIRED' // یک کد خطای سفارشی برای شناسایی راحت در افزونه
+    });   
+
+ }
 
     const payload = { 
       sub: authToken.id,
